@@ -122,7 +122,8 @@ final class GameSearchUi(helpers: Helpers)(
         f.clock,
         f.source,
         f.perf,
-        f.mode
+        f.startPosition,
+        f.mode,
       ),
       table(
         f.hasAi,
@@ -246,7 +247,7 @@ final class SearchForm(helpers: Helpers)(form: Form[?])(using Translate):
   def perf =
     tr(
       th(label(`for` := form3.id(form("perf")))(trans.site.variant())),
-      td(
+      td(cls := "pref")(
         form3.select(
           form("perf"),
           perfKeys.map: v =>
@@ -254,6 +255,12 @@ final class SearchForm(helpers: Helpers)(form: Form[?])(using Translate):
           "".some
         )
       )
+    )
+
+  def startPosition =
+    tr(cls := "startPosition none")(
+      th(label(`for` := form3.id(form("startPosition")))("Start Position")),
+      td(form3.input(form("startPosition"))(tpe := "text"))
     )
 
   def mode =

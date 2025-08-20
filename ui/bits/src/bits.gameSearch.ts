@@ -63,6 +63,14 @@ site.load.then(() => {
   toggleAiLevel();
   $form.find('.opponent select').on('change', toggleAiLevel);
 
+  function toggleStartPosition() {
+    $form.find('.pref select').each(function (this: HTMLSelectElement) {
+      $form.find('.startPosition').toggleClass('none', this.selectedIndex !== 7);
+    });
+  }
+  toggleStartPosition();
+  $form.find('.pref select').on('change', toggleStartPosition);
+
   function serialize() {
     const params = new URLSearchParams();
     for (const [k, v] of new FormData(form).entries()) {
