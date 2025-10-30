@@ -27,6 +27,7 @@ final private[gameSearch] class GameSearchForm:
       "perf" -> optional(numberIn(perfKeys.map(_.id.value))),
       "source" -> optional(numberIn(FormHelpers.sources)),
       "mode" -> optional(numberIn(FormHelpers.modes)),
+      "startPosition" -> optional(numberIn(FormHelpers.startPositions)),
       "turnsMin" -> optional(numberIn(FormHelpers.turns)),
       "turnsMax" -> optional(numberIn(FormHelpers.turns)),
       "ratingMin" -> optional(numberIn(FormHelpers.averageRatings)),
@@ -60,6 +61,7 @@ case class SearchData(
     perf: Option[Int] = None,
     source: Option[Int] = None,
     mode: Option[Int] = None,
+    startPosition: Option[Int] = None,
     turnsMin: Option[Int] = None,
     turnsMax: Option[Int] = None,
     ratingMin: Option[Int] = None,
@@ -91,6 +93,7 @@ case class SearchData(
       else perf.toList, // 1,2,3,4,6 are the perf types for standard games
     source = source,
     rated = mode.flatMap(Rated.apply).map(_.yes),
+    startPosition = startPosition,
     status = status,
     turns = IntRange(turnsMin, turnsMax),
     averageRating = IntRange(ratingMin, ratingMax),

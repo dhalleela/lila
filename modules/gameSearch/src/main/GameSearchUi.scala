@@ -259,9 +259,8 @@ final class SearchForm(helpers: Helpers)(form: Form[?])(using Translate):
 
   def startPosition =
     tr(cls := "startPosition none")(
-      th(label(`for` := form3.id(form("startPosition")))("Start Position")),
-      td(form3.input(form("startPosition"))(tpe := "text"))
-    )
+      th(label("Start Position")),
+      td(style := "text-align: left;")(form3.input(form("startPosition"))(tpe := "number", min := "0", max := "959")))
 
   def mode =
     tr(

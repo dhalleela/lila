@@ -26,6 +26,7 @@
       text-align: right;
     }
 
+    
     input[type='date'] {
       @include if-light {
         color-scheme: light;

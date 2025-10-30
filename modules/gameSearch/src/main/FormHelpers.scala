@@ -56,6 +56,8 @@ object FormHelpers:
 
   def modes(using Translate) = List(0 -> trans.site.casual.txt(), 1 -> trans.site.rated.txt())
 
+  val startPositions = 1 to 960
+
   val turns = options(
     (1 to 5) ++ (10 to 45 by 5) ++ (50 to 90 by 10) ++ (100 to 300 by 25),
     _.toString
