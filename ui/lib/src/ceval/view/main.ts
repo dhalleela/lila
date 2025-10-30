@@ -15,6 +15,7 @@ import { uciToMove } from '@lichess-org/chessground/util';
 import { renderCevalSettings } from './settings';
 import type CevalCtrl from '../ctrl';
 import { Chessground as makeChessground } from '@lichess-org/chessground';
+import { displayColumns } from '../../device';
 
 type EvalInfo = { knps: number; npsText: string; depthText: string };
 
@@ -135,8 +136,8 @@ export function renderGauge(ctrl: ParentCtrl): VNode | undefined {
 
 export function renderCeval(ctrl: ParentCtrl): VNode[] {
   const ceval = ctrl.getCeval();
-  if (!ceval.allowed() || !ceval.possible) return [];
-  if (!ctrl.showComputer()) return [analysisDisabled(ctrl)];
+  if (!ceval.allowed()) return [];
+  if (!ctrl.showComputer() && displayColumns() > 1) return [analysisDisabled(ctrl)];
   const enabled = ceval.enabled(),
     evs = ctrl.currentEvals(),
     threatMode = ctrl.threatMode(),
@@ -299,7 +300,7 @@ function checkHover(el: HTMLElement, ceval: CevalCtrl): void {
 
 export function renderPvs(ctrl: ParentCtrl): VNode | undefined {
   const ceval = ctrl.getCeval();
-  if (!ceval.allowed() || !ceval.possible || !ceval.enabled()) return;
+  if (!ceval.allowed() || !ceval.enabled()) return;
   const multiPv = ceval.search.multiPv,
     node = ctrl.getNode(),
     setup = parseFen(node.fen).unwrap();
