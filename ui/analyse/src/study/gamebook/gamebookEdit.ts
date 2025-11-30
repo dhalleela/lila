@@ -26,7 +26,7 @@ export function render(ctrl: AnalyseCtrl): VNode {
   const commentHook: Hooks = bind(
     'click',
     () => {
-      study.commentForm.start(study.vm.chapterId, ctrl.path, ctrl.node);
+      study.commentForm.start(study.vm.chapterId, ctrl.path, ctrl.node, '');
       study.vm.toolTab('comments');
       requestIdleCallback(
         () =>
