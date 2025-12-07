@@ -45,7 +45,9 @@ final class Api(env: Env, gameC: => Game) extends LilaController(env):
           name,
           withFollows = userWithFollows,
           withTrophies = getBool("trophies"),
-          withCanChallenge = getBool("challenge")
+          withCanChallenge = getBool("challenge"),
+          withProfile = getBoolOpt("profile") | true,
+          withRank = getBool("rank")
         )
         .map(toApiResult)
         .map(toHttp)
@@ -66,7 +68,7 @@ final class Api(env: Env, gameC: => Game) extends LilaController(env):
             env.user.jsonView.full(
               u.user,
               u.perfs.some,
-              withProfile = getBool("profile"),
+              withProfile = getBoolOpt("profile") | true,
               rankMap = withRanks.option(env.user.rankingsOf(u.user.id))
             )
         .map(toApiResult)
@@ -78,7 +80,7 @@ final class Api(env: Env, gameC: => Game) extends LilaController(env):
     else
       val withSignal = getBool("withSignal")
       env.user.lightUserApi.asyncMany(ids).dmap(_.flatten).flatMap { users =>
-        val streamingIds = env.streamer.liveStreamApi.userIds
+        val streamingIds = env.streamer.liveApi.userIds
         def toJson(u: LightUser) =
           lila.common.Json.lightUser
             .write(u)
