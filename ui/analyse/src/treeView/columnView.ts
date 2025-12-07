@@ -5,9 +5,11 @@ import { renderIndex } from '../view/components';
 import { InlineView, type Args } from './inlineView';
 
 export function renderColumnView(ctrl: AnalyseCtrl, concealOf: ConcealOf = () => () => null): VNode {
+  console.log('Rendering column view');
   const renderer = new ColumnView(ctrl, concealOf);
   const node = ctrl.tree.root;
   const commentTags = renderer.commentNodes(node);
+  console.log('Comment tags:', commentTags);
   const blackStarts = (node.ply & 1) === 1;
   return hl('div.tview2.tview2-column', { class: { hidden: ctrl.treeView.hidden } }, [
     commentTags.length > 0 && hl('interrupt', commentTags),

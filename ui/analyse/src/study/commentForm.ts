@@ -3,7 +3,7 @@ import { onInsert } from 'lib/view';
 import { throttle } from 'lib/async';
 import { h, type VNode } from 'snabbdom';
 import type AnalyseCtrl from '../ctrl';
-import { currentComments, isAuthorObj } from './studyComments';
+import { currentComments } from './studyComments';
 import { storage } from 'lib/storage';
 
 interface Current {
@@ -25,15 +25,17 @@ export class CommentForm {
   }
 
 
-  submit = (chapterId: string, path: Tree.Path, key: string, text: string) => {
+  submit = (key: string, text: string) => {
      const current = this.currents.get(key);
     if (current) {
+      console.log('Submitting comment for', current.chapterId, current.path, current.commentId, text);
       this.doSubmit(current.chapterId, current.path, current.commentId, text);
     }
   };
 
-  doSubmit = throttle(500, (chapterId: string, path: Tree.Path, text: string) => {
-    this.root.study!.makeChange('setComment', { ch: chapterId, path, text });
+  doSubmit = throttle(500, (chapterId: string, path: Tree.Path, commentId: string, text: string) => {
+    console.log(commentId ? 'Updating' : 'Creating', 'comment for', chapterId, path, commentId);
+    this.root.study!.makeChange('setComment', { ch: chapterId, path, id: commentId, text });
   });
 
   start = (chapterId: string, path: Tree.Path, node: Tree.Node, commentId: string): void => {
@@ -81,12 +83,10 @@ function renderTextarea(
   const study = root.study!;
   const setupTextarea = (vnode: VNode, old?: VNode) => {
     const el = vnode.elm as HTMLTextAreaElement;
-    console.log('setupTextarea', key);
     if (old?.data!.key !== key) {
-      const mine = (current.node.comments || []).find(function (c) {
-        return isAuthorObj(c.by) && c.by.id && c.by.id === ctrl.root.opts.userId;
-      });
-      el.value = mine ? mine.text : '';
+      // Find by comment ID, not user ID
+      const comment = (current.node.comments || []).find(c => c.id === current.commentId);
+      el.value = comment ? comment.text : '';
     }
     vnode.data!.key = key;
 
@@ -101,18 +101,30 @@ function renderTextarea(
     { hook: onInsert(() => root.enableWiki(root.data.game.variant.key === 'standard')) },
     [
       currentComments(root, !study.members.canContribute()),
-      h('form.form3', [
+      h('form.form3', {
+        hook: {
+          insert: vnode => {
+            // Prevent form submission reload
+            (vnode.elm as HTMLFormElement).onsubmit = (e: Event) => {
+              e.preventDefault();
+              return false;
+            };
+          },
+        },
+      }, [
         h('textarea#comment-text.form-control', {
           hook: {
             insert(vnode) {
               setupTextarea(vnode);
-              const el = vnode.elm as HTMLInputElement;
-              el.oninput = () => setTimeout(() => ctrl.submit(current.chapterId, current.path, key, el.value), 50);
+              const el = vnode.elm as HTMLTextAreaElement; // Fixed type
+              console.log('textarea insert', key);
+              el.oninput = () => setTimeout(() => ctrl.submit(key, el.value), 50);
               const heightStore = storage.make('study.comment.height');
               el.onmouseup = () => heightStore.set('' + el.offsetHeight);
               el.style.height = parseInt(heightStore.get() || '80') + 'px';
 
-              $(el).on('keydown', e => {
+              // Replace jQuery with native addEventListener
+              el.addEventListener('keydown', (e: KeyboardEvent) => {
                 if (e.code === 'Escape') el.blur();
               });
             },
@@ -127,7 +139,16 @@ function renderTextarea(
 export function view(root: AnalyseCtrl): VNode {
   const study = root.study!;
   const ctrl = study.commentForm;
-
+  // ctrl.clear();
+  // if(ctrl.currents.size === 0){
+  // const comments = root.node.comments || [];
+  //     if (comments.length > 0) {
+  //       comments.forEach(comment => {
+  //         console.log('Starting comment form for comment id', comment.id);
+  //         study.commentForm.start(study.vm.chapterId, root.path, root.node, comment.id);
+  //       });
+  //     } 
+  //   }
   if (ctrl.currents.size === 0) {
     return viewDisabled(root, 'Select a move to comment');
   }

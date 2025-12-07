@@ -191,7 +191,9 @@ final private class StudySocket(
             (o \ "d" \ "text")
               .asOpt[String]
               .foreach: text =>
-                applyWho(api.setComment(studyId, position.ref, Comment.sanitize(text)))
+                val commentId = (o \ "d" \ "id").asOpt[String].map(Comment.Id.apply)
+                commentId.pp
+                applyWho(api.setComment(studyId, position.ref, commentId, Comment.sanitize(text)))
 
         case "deleteComment" =>
           reading[AtPosition](o): position =>
@@ -333,6 +335,7 @@ final private class StudySocket(
     send.exec(RP.Out.tellRoomUsers(studyId, sendTo, makeMessage("members", members)))
 
   def setComment(pos: Position.Ref, comment: Comment, who: Who) =
+    comment.pp
     version(
       "setComment",
       Json.obj(

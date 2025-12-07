@@ -479,7 +479,10 @@ object Node:
   opaque type Comments = List[Comment]
   object Comments extends TotalWrapper[Comments, List[Comment]]:
     extension (a: Comments)
+      def findById(id: Comment.Id) = a.value.find(_.id == id)
       def findBy(author: Comment.Author) = a.value.find(_.by.is(author))
+      def findByIdOrAuthor(id: Comment.Id, author: Comment.Author) = 
+          findById(id).orElse(findBy(author))
       def set(comment: Comment): Comments =
         if a.value.exists(_.by.is(comment.by)) then
           a.value.map:
