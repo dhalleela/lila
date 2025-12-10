@@ -484,9 +484,9 @@ object Node:
       def findByIdOrAuthor(id: Comment.Id, author: Comment.Author) = 
           findById(id).orElse(findBy(author))
       def set(comment: Comment): Comments =
-        if a.value.exists(_.by.is(comment.by)) then
+        if a.value.exists(c => c.by.is(comment.by) && c.id == comment.id) then
           a.value.map:
-            case c if c.by.is(comment.by) => c.copy(text = comment.text, by = comment.by)
+            case c if c.by.is(comment.by) && c.id == comment.id => c.copy(text = comment.text, by = comment.by)
             case c => c
         else a.value :+ comment
       def delete(commentId: Comment.Id): Comments = a.value.filterNot(_.id == commentId)

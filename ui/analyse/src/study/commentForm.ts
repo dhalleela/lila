@@ -36,9 +36,11 @@ export class CommentForm {
   doSubmit = throttle(500, (chapterId: string, path: Tree.Path, commentId: string, text: string) => {
     console.log(commentId ? 'Updating' : 'Creating', 'comment for', chapterId, path, commentId);
     this.root.study!.makeChange('setComment', { ch: chapterId, path, id: commentId, text });
+    this.root.redraw(); // ← Add parentheses to actually call the function
   });
 
   start = (chapterId: string, path: Tree.Path, node: Tree.Node, commentId: string): void => {
+    console.log("Called start", chapterId, path, commentId)
     const key = this.makeKey(chapterId, path, commentId);
     this.opening(key);
     this.currents.set(key, { chapterId, path, node, commentId});
@@ -86,6 +88,7 @@ function renderTextarea(
     if (old?.data!.key !== key) {
       // Find by comment ID, not user ID
       const comment = (current.node.comments || []).find(c => c.id === current.commentId);
+      console.log('Setting up textarea for comment', current.commentId, comment ? comment.text : '');
       el.value = comment ? comment.text : '';
     }
     vnode.data!.key = key;
@@ -149,6 +152,7 @@ export function view(root: AnalyseCtrl): VNode {
   //       });
   //     } 
   //   }
+  console.log('Rendering comment form, currents:', ctrl.currents.size);
   if (ctrl.currents.size === 0) {
     return viewDisabled(root, 'Select a move to comment');
   }

@@ -469,8 +469,6 @@ final class StudyApi(
       yield sendTo(study.id)(_.setTags(chapter.id, chapter.tags, who))
 
   def setComment(studyId: StudyId, position: Position.Ref, commentId: Option[Comment.Id], text: CommentStr)(who: Who) =
-    commentId.pp
-    text.pp
     sequenceStudyWithChapter(studyId, position.chapterId):
       case Study.WithChapter(study, chapter) =>
         Contribute(who.u, study):
@@ -488,8 +486,10 @@ final class StudyApi(
     position.chapter.setComment(comment, position.path) match
       case Some(newChapter) =>
         newChapter.root.nodeAt(position.path).so { node =>
-          node.comments.findByIdOrAuthor(comment.id, comment.by).so { c =>
-            for _ <- chapterRepo.setComments(node.comments.filterEmpty)(newChapter, position.path)
+          comment.id.pp
+          node.comments.findById(comment.id).so { c =>
+            node.comments.set(c).filterEmpty.pp
+            for _ <- chapterRepo.setComments(node.comments.set(c).filterEmpty)(newChapter, position.path)
             yield
               sendTo(study.id)(_.setComment(position.ref, c, who))
               studyRepo.updateNow(study)
@@ -862,5 +862,4 @@ final class StudyApi(
   private[study] def registerSocket(s: StudySocket) = socket = s.some
   private def sendTo(studyId: StudyId)(f: StudySocket => StudyId => Unit): Unit =
     socket.foreach: s =>
-      studyId.pp
       f(s)(studyId)
