@@ -118,8 +118,7 @@ export function contextMenu(ctrl: StudyCtrl, path: Tree.Path, node: Tree.Node): 
             attrs: dataIcon(licon.BubbleSpeech),
             hook: bind('click', () => {
               ctrl.vm.toolTab('comments');
-              console.log(node);
-              // ctrl.commentForm.start(ctrl.currentChapter().id, path, node, '');
+              ctrl.commentForm.start(ctrl.currentChapter().id, path, node, '');
             }),
           },
           i18n.study.commentThisMove,
@@ -154,7 +153,6 @@ export const overboard = (ctrl: StudyCtrl) =>
               : undefined;
 
 export function underboard(ctrl: AnalyseCtrl): LooseVNodes {
-  console.log('Rendering underboard view');
   if (ctrl.study?.practice) return practiceView.underboard(ctrl.study!);
   const study = ctrl.study!,
     toolTab = study.vm.toolTab();
@@ -166,6 +164,13 @@ export function underboard(ctrl: AnalyseCtrl): LooseVNodes {
       panel = metadata(study);
       break;
     case 'comments':
+      if(study.vm.mode.write) {
+          ctrl.study!.commentForm.clear();
+          const comments = ctrl.node.comments || [];
+          comments.forEach(comment => {
+            ctrl.study!.commentForm.start(ctrl.study!.vm.chapterId, ctrl.path, ctrl.node, comment.id);
+         });
+      }
       panel = study.vm.mode.write
         ? commentForm.view(ctrl)
         : commentForm.viewDisabled(
@@ -263,9 +268,8 @@ function buttons(root: AnalyseCtrl): VNode {
           icon: iconTag(licon.BubbleSpeech),
           onClick() {
               ctrl.commentForm.clear();
-              root.node.comments?.forEach((comment) => console.log(comment.text));
               root.node.comments?.forEach((comment) => ctrl.commentForm.start(ctrl.vm.chapterId, root.path, root.node, comment.id));
-              root.redraw();
+              root.study!.redraw();
           },
           count: (root.node.comments || []).length,
         }),

@@ -486,9 +486,7 @@ final class StudyApi(
     position.chapter.setComment(comment, position.path) match
       case Some(newChapter) =>
         newChapter.root.nodeAt(position.path).so { node =>
-          comment.id.pp
           node.comments.findById(comment.id).so { c =>
-            node.comments.set(c).filterEmpty.pp
             for _ <- chapterRepo.setComments(node.comments.set(c).filterEmpty)(newChapter, position.path)
             yield
               sendTo(study.id)(_.setComment(position.ref, c, who))
