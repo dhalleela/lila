@@ -16,7 +16,12 @@ interface Current {
 
 export class CommentForm {
   currents = new Map<string, Current>();
-  opening = prop<string | null>(null); 
+  opening = prop<string | null>(null);
+  newComment = false; 
+
+  setnewComment = (newComment: boolean) => {
+    this.newComment = newComment;
+  }
 
   constructor(readonly root: AnalyseCtrl) {}
 
@@ -135,7 +140,7 @@ export function view(root: AnalyseCtrl): VNode {
   const rerender = Array.from(ctrl.currents.keys()).some(key => !commentKeys.has(key));
   const comments = root.node.comments || [];
    if (rerender || ctrl.currents.size === 0) {
-    ctrl.clear(); 
+    if(!ctrl.newComment) ctrl.clear(); 
     comments.forEach((comment) => {
         ctrl.start(study.vm.chapterId, root.path, root.node, comment.id);
    });

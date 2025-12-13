@@ -192,7 +192,6 @@ final private class StudySocket(
               .asOpt[String]
               .foreach: text =>
                 val commentId = (o \ "d" \ "id").asOpt[String].map(Comment.Id.apply)
-                commentId.pp
                 applyWho(api.setComment(studyId, position.ref, commentId, Comment.sanitize(text)))
 
         case "deleteComment" =>
@@ -335,7 +334,6 @@ final private class StudySocket(
     send.exec(RP.Out.tellRoomUsers(studyId, sendTo, makeMessage("members", members)))
 
   def setComment(pos: Position.Ref, comment: Comment, who: Who) =
-    comment.pp
     version(
       "setComment",
       Json.obj(

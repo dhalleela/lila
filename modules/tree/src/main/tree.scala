@@ -481,8 +481,7 @@ object Node:
     extension (a: Comments)
       def findById(id: Comment.Id) = a.value.find(_.id == id)
       def findBy(author: Comment.Author) = a.value.find(_.by.is(author))
-      def findByIdOrAuthor(id: Comment.Id, author: Comment.Author) = 
-          findById(id).orElse(findBy(author))
+      def findByIdAndAuthor(id: Comment.Id, author: Comment.Author) = a.value.find(c => c.id == id && c.by.is(author))
       def set(comment: Comment): Comments =
         if a.value.exists(c => c.by.is(comment.by) && c.id == comment.id) then
           a.value.map:
