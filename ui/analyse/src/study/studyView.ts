@@ -164,13 +164,6 @@ export function underboard(ctrl: AnalyseCtrl): LooseVNodes {
       panel = metadata(study);
       break;
     case 'comments':
-      if(study.vm.mode.write) {
-          ctrl.study!.commentForm.clear();
-          const comments = ctrl.node.comments || [];
-          comments.forEach(comment => {
-            ctrl.study!.commentForm.start(ctrl.study!.vm.chapterId, ctrl.path, ctrl.node, comment.id);
-         });
-      }
       panel = study.vm.mode.write
         ? commentForm.view(ctrl)
         : commentForm.viewDisabled(

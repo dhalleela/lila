@@ -11,6 +11,7 @@ interface Current {
   path: Tree.Path;
   node: Tree.Node;
   commentId: string;
+  focusId?: string;
 }
 
 export class CommentForm {
@@ -19,16 +20,18 @@ export class CommentForm {
 
   constructor(readonly root: AnalyseCtrl) {}
 
-  private makeKey(chapterId: string, path: Tree.Path, commentId: string): string {
+  makeKey(chapterId: string, path: Tree.Path, commentId: string): string {
     return `${chapterId}:${path}:${commentId}`;
   }
 
-  submit = (key: string, text: string) => {
+  submit = (key: string, el: HTMLInputElement) => {
      const current = this.currents.get(key);
-    if (current) {
-      this.doSubmit(current.chapterId, current.path, current.commentId, text);
-    }else{
-      console.log('No current comment found for key:', key);
+    if (current) { 
+      this.currents.forEach((cur, _) => {
+          cur.focusId = undefined;
+      });
+      this.currents.get(key)!.focusId = el.id;
+      this.doSubmit(current.chapterId, current.path, current.commentId, el.value);
     }
   };
 
@@ -94,12 +97,12 @@ function renderTextarea(
     [
       currentComments(root, !study.members.canContribute()),
       h('form.form3', [
-        h('textarea#comment-text.form-control', {
+        h(`textarea#${key}.form-control`, {
           hook: {
             insert(vnode) {
               setupTextarea(vnode);
               const el = vnode.elm as HTMLInputElement;
-              el.oninput = () => setTimeout(() => ctrl.submit(key, el.value), 50);
+              el.oninput = () => setTimeout(() => ctrl.submit(key, el), 50);
               const heightStore = storage.make('study.comment.height');
               el.onmouseup = () => heightStore.set('' + el.offsetHeight);
               el.style.height = parseInt(heightStore.get() || '80') + 'px';
@@ -111,7 +114,8 @@ function renderTextarea(
             postpatch: (old, vnode) => {
               setupTextarea(vnode, old);
               const el = vnode.elm as HTMLInputElement;
-              el.oninput = () => setTimeout(() => ctrl.submit(key, el.value), 50);
+              if(ctrl.currents.get(key)?.focusId === el.id) el.focus();
+              el.oninput = () => setTimeout(() => ctrl.submit(key, el), 50);
             },
           },
         }),
@@ -123,6 +127,19 @@ function renderTextarea(
 export function view(root: AnalyseCtrl): VNode {
   const study = root.study!;
   const ctrl = study.commentForm;
+ 
+  const commentKeys = new Set((root.node.comments || []).map(c => 
+    ctrl.makeKey(study.vm.chapterId, root.path, c.id)
+  ));
+
+  const rerender = Array.from(ctrl.currents.keys()).some(key => !commentKeys.has(key));
+  const comments = root.node.comments || [];
+   if (rerender || ctrl.currents.size === 0) {
+    ctrl.clear(); 
+    comments.forEach((comment) => {
+        ctrl.start(study.vm.chapterId, root.path, root.node, comment.id);
+   });
+  }
 
   if (ctrl.currents.size === 0) {
     return viewDisabled(root, 'Select a move to comment');
