@@ -51,13 +51,14 @@ export function view(root: AnalyseCtrl): VNode {
     ctrl = study.commentForm,
     current = ctrl.current();
   if (!current) return viewDisabled(root, 'Select a move to comment');
-  const setupTextarea = (vnode: VNode, old?: VNode) => {
+
+  const setupTextarea = (vnode: VNode, comment?: any, old?: VNode) => {
     const el = vnode.elm as HTMLInputElement;
-    const newKey = current.chapterId + current.path;
+    const newKey = current.chapterId + current.path + (comment ? comment.id : '');
 
     if (old?.data!.path !== newKey) {
       const mine = (current.node.comments || []).find(function (c) {
-        return isAuthorObj(c.by) && c.by.id && c.by.id === ctrl.root.opts.userId;
+        return isAuthorObj(c.by) && c.by.id && c.by.id === ctrl.root.opts.userId && c.id === comment!.id;
       });
       el.value = mine ? mine.text : '';
     }
@@ -69,30 +70,44 @@ export function view(root: AnalyseCtrl): VNode {
     }
   };
 
+  // Render a textarea for each comment
+  const commentTextareas = (current.node.comments || []).map(comment =>
+    h('div.study__comment-edit', [
+      h('textarea.form-control', {
+        props: { value: comment.text },
+        hook: {
+          insert(vnode) {
+            setupTextarea(vnode, comment);
+            const el = vnode.elm as HTMLInputElement;
+            el.oninput = () =>
+              setTimeout(() => {
+                ctrl.root.study!.makeChange('setComment', {
+                  ch: current.chapterId,
+                  path: current.path,
+                  text: el.value,
+                  id: comment.id,
+                });
+              }, 50);
+            const heightStore = storage.make('study.comment.height.' + comment.id);
+            el.onmouseup = () => heightStore.set('' + el.offsetHeight);
+            el.style.height = parseInt(heightStore.get() || '80') + 'px';
+
+            $(el).on('keydown', e => {
+              if (e.code === 'Escape') el.blur();
+            });
+          },
+          postpatch: (old, vnode) => setupTextarea(vnode, comment, old),
+        },
+      }),
+    ]),
+  );
+
   return h(
     'div.study__comments',
     { hook: onInsert(() => root.enableWiki(root.data.game.variant.key === 'standard')) },
     [
       currentComments(root, !study.members.canContribute()),
-      h('form.form3', [
-        h('textarea#comment-text.form-control', {
-          hook: {
-            insert(vnode) {
-              setupTextarea(vnode);
-              const el = vnode.elm as HTMLInputElement;
-              el.oninput = () => setTimeout(() => ctrl.submit(el.value), 50);
-              const heightStore = storage.make('study.comment.height');
-              el.onmouseup = () => heightStore.set('' + el.offsetHeight);
-              el.style.height = parseInt(heightStore.get() || '80') + 'px';
-
-              $(el).on('keydown', e => {
-                if (e.code === 'Escape') el.blur();
-              });
-            },
-            postpatch: (old, vnode) => setupTextarea(vnode, old),
-          },
-        }),
-      ]),
+      h('form.form3', commentTextareas),
       h('div.analyse__wiki.study__wiki.force-ltr'),
     ],
   );
