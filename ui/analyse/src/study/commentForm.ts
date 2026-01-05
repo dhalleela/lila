@@ -71,45 +71,45 @@ export function view(root: AnalyseCtrl): VNode {
   };
 
   const commentTextareas = () => {
-  let comments = current.node.comments || []
-  comments = comments.filter(comment => {
-    return isAuthorObj(comment.by) && comment.by.id === ctrl.root.opts.userId;
-  });
-  if (comments.length === 0) {
-    comments = [{ id: '', by: '', text: '' }];
-  }
-  return (comments).map(comment =>
-    h('div.study__comment-edit', [
-      h('textarea.form-control', {
-        key: comment.id,
-        props: { value: comment.text },
-        hook: {
-          insert(vnode) {
-            setupTextarea(vnode, comment);
-            const el = vnode.elm as HTMLInputElement;
-            el.oninput = () =>
-              setTimeout(() => {
-                ctrl.root.study!.makeChange('setComment', {
-                  ch: current.chapterId,
-                  path: current.path,
-                  text: el.value,
-                  id: comment.id,
-                });
-              }, 50);
-            const heightStore = storage.make('study.comment.height.' + comment.id);
-            el.onmouseup = () => heightStore.set('' + el.offsetHeight);
-            el.style.height = parseInt(heightStore.get() || '80') + 'px';
+    let comments = current.node.comments || [];
+    comments = comments.filter(comment => {
+      return isAuthorObj(comment.by) && comment.by.id === ctrl.root.opts.userId;
+    });
+    if (comments.length === 0) {
+      comments = [{ id: '', by: '', text: '' }];
+    }
+    return comments.map(comment =>
+      h('div.study__comment-edit', [
+        h('textarea.form-control', {
+          key: comment.id,
+          props: { value: comment.text },
+          hook: {
+            insert(vnode) {
+              setupTextarea(vnode, comment);
+              const el = vnode.elm as HTMLInputElement;
+              el.oninput = () =>
+                setTimeout(() => {
+                  ctrl.root.study!.makeChange('setComment', {
+                    ch: current.chapterId,
+                    path: current.path,
+                    text: el.value,
+                    id: comment.id,
+                  });
+                }, 50);
+              const heightStore = storage.make('study.comment.height.' + comment.id);
+              el.onmouseup = () => heightStore.set('' + el.offsetHeight);
+              el.style.height = parseInt(heightStore.get() || '80') + 'px';
 
-            $(el).on('keydown', e => {
-              if (e.code === 'Escape') el.blur();
-            });
+              $(el).on('keydown', e => {
+                if (e.code === 'Escape') el.blur();
+              });
+            },
+            postpatch: (old, vnode) => setupTextarea(vnode, comment, old),
           },
-          postpatch: (old, vnode) => setupTextarea(vnode, comment, old),
-        },
-      }),
-    ]),
-  );
-}
+        }),
+      ]),
+    );
+  };
 
   return h(
     'div.study__comments',
