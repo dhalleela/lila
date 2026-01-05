@@ -70,10 +70,18 @@ export function view(root: AnalyseCtrl): VNode {
     }
   };
 
-  // Render a textarea for each comment
-  const commentTextareas = (current.node.comments || []).map(comment =>
+  const commentTextareas = () => {
+  let comments = current.node.comments || []
+  comments = comments.filter(comment => {
+    return isAuthorObj(comment.by) && comment.by.id === ctrl.root.opts.userId;
+  });
+  if (comments.length === 0) {
+    comments = [{ id: '', by: '', text: '' }];
+  }
+  return (comments).map(comment =>
     h('div.study__comment-edit', [
       h('textarea.form-control', {
+        key: comment.id,
         props: { value: comment.text },
         hook: {
           insert(vnode) {
@@ -101,13 +109,14 @@ export function view(root: AnalyseCtrl): VNode {
       }),
     ]),
   );
+}
 
   return h(
     'div.study__comments',
     { hook: onInsert(() => root.enableWiki(root.data.game.variant.key === 'standard')) },
     [
       currentComments(root, !study.members.canContribute()),
-      h('form.form3', commentTextareas),
+      h('form.form3', commentTextareas()),
       h('div.analyse__wiki.study__wiki.force-ltr'),
     ],
   );
