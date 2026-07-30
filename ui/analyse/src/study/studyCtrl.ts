@@ -506,6 +506,7 @@ export default class StudyCtrl {
       this.vm.mode.sticky = false;
       if (!this.vm.behind) this.vm.behind = 1;
       this.vm.chapterId = id;
+      if (this.members.myMember()) this.send('setViewedChapter', id);
       this.relay?.liveboardPlugin?.reset();
       await this.xhrReload(false, () => componentCallbacks(id));
     }
